@@ -5,6 +5,7 @@
 .vscode
 build
 out
+books
 *.iml
 *.iws
 *.ipr

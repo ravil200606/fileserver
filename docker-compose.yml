@@ -7,7 +7,9 @@ services:
     ports:
       - "${FILESERVER_PORT:-8080}:8080"
     environment:
-      FILESERVER_FILE_PATH: /data/mif.zip
+      # Каталог с книгами внутри контейнера (точка монтирования тома ниже).
+      BOOKS_DIR: /data
+      FILESERVER_REFRESH_INTERVAL_SECONDS: "${FILESERVER_REFRESH_INTERVAL_SECONDS:-5}"
     volumes:
       # Каталог с книгами на хосте. По умолчанию — ./books рядом с compose-файлом.
-      - "${BOOKS_DIR:-./books}:/data:ro"
+      - "${BOOKS_HOST_DIR:-./books}:/data:ro"

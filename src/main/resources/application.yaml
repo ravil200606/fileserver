@@ -9,6 +9,7 @@ logging:
     ars.home.fileserver: DEBUG
 
 fileserver:
-  # Путь к отдаваемому файлу. Переопределяется переменной окружения FILESERVER_FILE_PATH
-  # (например, при запуске в Docker с примонтированным томом).
-  file-path: ${FILESERVER_FILE_PATH:/home/ravil/files/mif.zip}
+  # Каталог с книгами. По умолчанию ~/books, переопределяется переменной BOOKS_DIR.
+  books-dir: ${BOOKS_DIR:~/books}
+  # Как часто страница перечитывает список файлов (в секундах).
+  refresh-interval-seconds: ${FILESERVER_REFRESH_INTERVAL_SECONDS:5}

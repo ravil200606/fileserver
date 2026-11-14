@@ -3,11 +3,273 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Fileserver</title>
+    <title>Fileserver — книги</title>
+    <link rel="stylesheet" href="/css/styles.css?v=3">
 </head>
 <body>
-<div>
-    <a href="/file/download">Файл</a>
+<div class="page">
+    <div class="page-header">
+        <h1 class="page-title">Книги</h1>
+        <span id="count" class="count-badge" style="display: none;"></span>
+    </div>
+
+    <div id="status" class="alert alert-secondary" role="status">Загрузка…</div>
+
+    <div id="books-card" class="card" style="display: none;">
+        <div class="table-wrapper">
+            <table class="books-table">
+                <thead>
+                <tr>
+                    <th scope="col" class="nowrap">Автор</th>
+                    <th scope="col">Название</th>
+                    <th scope="col" class="text-end nowrap">Размер файла</th>
+                </tr>
+                <tr class="filter-row">
+                    <th scope="col">
+                        <div class="filter-field">
+                            <input id="filter-author" type="text" class="filter-input"
+                                   placeholder="Автор" aria-label="Фильтр по автору" autocomplete="off">
+                            <button id="clear-filter-author" type="button" class="filter-clear"
+                                    aria-label="Очистить фильтр по автору" title="Очистить">&times;</button>
+                        </div>
+                    </th>
+                    <th scope="col">
+                        <div class="filter-field">
+                            <input id="filter-title" type="text" class="filter-input"
+                                   placeholder="Название" aria-label="Фильтр по названию" autocomplete="off">
+                            <button id="clear-filter-title" type="button" class="filter-clear"
+                                    aria-label="Очистить фильтр по названию" title="Очистить">&times;</button>
+                        </div>
+                    </th>
+                    <th scope="col"></th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
 </div>
+
+<script>
+    (function () {
+        var card = document.getElementById('books-card');
+        var tbody = card.getElementsByTagName('tbody')[0];
+        var status = document.getElementById('status');
+        var count = document.getElementById('count');
+
+        var authorFilter = document.getElementById('filter-author');
+        var titleFilter = document.getElementById('filter-title');
+        var clearAuthorFilter = document.getElementById('clear-filter-author');
+        var clearTitleFilter = document.getElementById('clear-filter-title');
+
+        var allFiles = [];
+        var refreshIntervalSeconds = 5;
+        var lastSignature = null;
+        var timerId = null;
+
+        function showStatus(message, type) {
+            status.className = 'alert alert-' + type;
+            status.style.display = '';
+            status.textContent = message;
+        }
+
+        function hideStatus() {
+            status.style.display = 'none';
+        }
+
+        function setVisible(element, visible) {
+            element.style.display = visible ? '' : 'none';
+        }
+
+        function formatSize(bytes) {
+            var units = ['Б', 'КБ', 'МБ', 'ГБ', 'ТБ'];
+            var value = bytes;
+            var unit = 0;
+            while (value >= 1024 && unit < units.length - 1) {
+                value /= 1024;
+                unit++;
+            }
+            return unit === 0 ? value + ' ' + units[unit] : value.toFixed(1) + ' ' + units[unit];
+        }
+
+        function clearChildren(element) {
+            while (element.firstChild) {
+                element.removeChild(element.firstChild);
+            }
+        }
+
+        function filterQuery(input) {
+            var value = input.value;
+            if (!value) {
+                return '';
+            }
+            value = value.replace(/^\s+|\s+$/g, '');
+            return value.length >= 3 ? value.toLowerCase() : '';
+        }
+
+        function filterFiles(authorQuery, titleQuery) {
+            var result = [];
+            for (var i = 0; i < allFiles.length; i++) {
+                var file = allFiles[i];
+                var author = (file.author || '').toLowerCase();
+                var title = (file.title || '').toLowerCase();
+
+                if (authorQuery && author.indexOf(authorQuery) === -1) {
+                    continue;
+                }
+                if (titleQuery && title.indexOf(titleQuery) === -1) {
+                    continue;
+                }
+                result.push(file);
+            }
+            return result;
+        }
+
+        function render() {
+            if (allFiles.length === 0) {
+                lastSignature = null;
+                setVisible(card, false);
+                setVisible(count, false);
+                showStatus('В каталоге пока нет книг.', 'secondary');
+                return;
+            }
+
+            hideStatus();
+            setVisible(card, true);
+            setVisible(count, true);
+
+            var authorQuery = filterQuery(authorFilter);
+            var titleQuery = filterQuery(titleFilter);
+            var files = filterFiles(authorQuery, titleQuery);
+            var filtersActive = authorQuery !== '' || titleQuery !== '';
+
+            count.textContent = filtersActive
+                    ? 'Найдено: ' + files.length + ' из ' + allFiles.length
+                    : 'Файлов: ' + allFiles.length;
+
+            var signatureParts = ['a:' + authorQuery, 't:' + titleQuery];
+            for (var i = 0; i < allFiles.length; i++) {
+                signatureParts.push(allFiles[i].name + '\u0000' + allFiles[i].size + '\u0000' + allFiles[i].modified);
+            }
+            var signature = signatureParts.join('\u0001');
+            if (signature === lastSignature) {
+                return;
+            }
+            lastSignature = signature;
+
+            clearChildren(tbody);
+            if (files.length === 0) {
+                var emptyRow = document.createElement('tr');
+                emptyRow.className = 'empty-row';
+
+                var emptyCell = document.createElement('td');
+                emptyCell.colSpan = 3;
+                emptyCell.appendChild(document.createTextNode('Ничего не найдено.'));
+
+                emptyRow.appendChild(emptyCell);
+                tbody.appendChild(emptyRow);
+                return;
+            }
+
+            for (var j = 0; j < files.length; j++) {
+                var file = files[j];
+                var row = document.createElement('tr');
+
+                var authorCell = document.createElement('td');
+                authorCell.className = 'nowrap';
+                authorCell.appendChild(document.createTextNode(file.author || '—'));
+
+                var titleCell = document.createElement('td');
+                var link = document.createElement('a');
+                link.className = 'book-link';
+                link.href = '/file/download?name=' + encodeURIComponent(file.name);
+                link.appendChild(document.createTextNode(file.title));
+                titleCell.appendChild(link);
+
+                var sizeCell = document.createElement('td');
+                sizeCell.className = 'text-end nowrap muted';
+                sizeCell.appendChild(document.createTextNode(formatSize(file.size)));
+
+                row.appendChild(authorCell);
+                row.appendChild(titleCell);
+                row.appendChild(sizeCell);
+                tbody.appendChild(row);
+            }
+        }
+
+        function handleFilterInput() {
+            render();
+        }
+
+        authorFilter.onkeyup = handleFilterInput;
+        authorFilter.oninput = handleFilterInput;
+        authorFilter.onchange = handleFilterInput;
+        titleFilter.onkeyup = handleFilterInput;
+        titleFilter.oninput = handleFilterInput;
+        titleFilter.onchange = handleFilterInput;
+
+        clearAuthorFilter.onclick = function () {
+            authorFilter.value = '';
+            render();
+        };
+
+        clearTitleFilter.onclick = function () {
+            titleFilter.value = '';
+            render();
+        };
+
+        function scheduleNextRefresh() {
+            clearTimeout(timerId);
+            timerId = setTimeout(refresh, refreshIntervalSeconds * 1000);
+        }
+
+        function refresh() {
+            var request = new XMLHttpRequest();
+            var finished = false;
+
+            function finish() {
+                if (finished) {
+                    return;
+                }
+                finished = true;
+                scheduleNextRefresh();
+            }
+
+            request.onreadystatechange = function () {
+                if (request.readyState !== 4) {
+                    return;
+                }
+
+                try {
+                    if (request.status !== 200) {
+                        throw new Error('HTTP ' + request.status);
+                    }
+
+                    var data = JSON.parse(request.responseText);
+                    var interval = parseInt(data.refreshIntervalSeconds, 10);
+                    refreshIntervalSeconds = interval > 0 ? interval : 5;
+
+                    allFiles = data.files || [];
+                    render();
+                } catch (error) {
+                    showStatus('Не удалось обновить список файлов: ' + error.message, 'danger');
+                } finally {
+                    finish();
+                }
+            };
+
+            request.onerror = function () {
+                showStatus('Не удалось обновить список файлов: ошибка сети', 'danger');
+                finish();
+            };
+
+            request.open('GET', '/files?_=' + new Date().getTime(), true);
+            request.setRequestHeader('Cache-Control', 'no-cache');
+            request.send(null);
+        }
+
+        refresh();
+    })();
+</script>
 </body>
 </html>

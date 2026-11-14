@@ -18,13 +18,19 @@ RUN ./gradlew bootJar --no-daemon -x test \
 FROM eclipse-temurin:17-jre
 
 RUN groupadd --system app \
-    && useradd --system --gid app --home-dir /app app
+    && useradd --system --gid app --home-dir /app app \
+    && mkdir -p /data \
+    && chown app:app /data
 
 WORKDIR /app
 
 COPY --from=build --chown=app:app /workspace/app.jar /app/app.jar
 
 USER app
+
+# Каталог с книгами внутри контейнера; при запуске в него монтируется том.
+ENV BOOKS_DIR=/data
+VOLUME ["/data"]
 
 EXPOSE 8080
 
