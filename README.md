@@ -10,3 +10,91 @@
 Сервер предоставляет страничку со списком, который обновляется автоматически как-только в хранилище добавлена новая книга.
 В идеале, я бы хотел сделать его максимально легковесным, чтоб он крутился на устройстве с низким энергопотреблением
 и всегда был доступен в рамках моей домашней сети. 
+
+## Запуск в Docker
+
+В проекте есть многоступенчатый `Dockerfile` (сборка через Gradle wrapper, запуск на JRE 17)
+и `docker-compose.yml` для быстрого старта.
+
+### Требования
+
+- Docker 20.10+ (или Docker Desktop);
+- Docker Compose v2 — только если запускаете через `docker compose`.
+
+### Быстрый старт через Docker Compose
+
+1. Создайте каталог с книгами и положите туда файл, который должен отдавать сервер
+   (по умолчанию ожидается `mif.zip`):
+
+   ```bash
+   mkdir -p books
+   cp /путь/к/mif.zip books/
+   ```
+
+2. Соберите образ и запустите контейнер:
+
+   ```bash
+   docker compose up -d --build
+   ```
+
+3. Откройте в браузере `http://localhost:8080/`, файл доступен по адресу
+   `http://localhost:8080/file/download`.
+
+Каталог `./books` монтируется в контейнер как `/data` только для чтения.
+Путь к отдаваемому файлу внутри контейнера задаётся переменной `FILESERVER_FILE_PATH`
+(в compose-файле это `/data/mif.zip`).
+
+Полезные команды:
+
+```bash
+docker compose logs -f       # логи
+docker compose down          # остановить и удалить контейнер
+```
+
+### Запуск через docker run
+
+```bash
+# сборка образа
+docker build -t fileserver:latest .
+
+# запуск: каталог с книгами монтируется в /data
+docker run -d \
+  --name fileserver \
+  --restart unless-stopped \
+  -p 8080:8080 \
+  -v "$(pwd)/books:/data:ro" \
+  -e FILESERVER_FILE_PATH=/data/mif.zip \
+  fileserver:latest
+```
+
+### Переменные окружения
+
+| Переменная             | По умолчанию                 | Назначение                                                        |
+|------------------------|------------------------------|-------------------------------------------------------------------|
+| `FILESERVER_FILE_PATH` | `/home/ravil/files/mif.zip`  | Путь к файлу, который отдаёт `/file/download`                     |
+| `SERVER_PORT`          | `8080`                       | Порт приложения внутри контейнера                                 |
+| `JAVA_TOOL_OPTIONS`    | —                            | Дополнительные JVM-параметры, например `-Xmx256m`                 |
+
+Пример запуска с другим портом и ограничением памяти:
+
+```bash
+docker run -d --name fileserver \
+  -p 9090:9090 \
+  -e SERVER_PORT=9090 \
+  -e JAVA_TOOL_OPTIONS="-Xmx256m" \
+  -v "$(pwd)/books:/data:ro" \
+  -e FILESERVER_FILE_PATH=/data/mif.zip \
+  fileserver:latest
+```
+
+Для compose-запуска порт на хосте и каталог с книгами можно переопределить
+переменными `FILESERVER_PORT` и `BOOKS_DIR`:
+
+```bash
+FILESERVER_PORT=9090 BOOKS_DIR=/mnt/books docker compose up -d
+```
+
+> Если файл по пути `FILESERVER_FILE_PATH` отсутствует или недоступен контейнеру,
+> запрос `/file/download` завершится ошибкой 500. Убедитесь, что каталог смонтирован
+> и путь указан верно.
+

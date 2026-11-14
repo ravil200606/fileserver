@@ -7,3 +7,8 @@ management:
 logging:
   level:
     ars.home.fileserver: DEBUG
+
+fileserver:
+  # Путь к отдаваемому файлу. Переопределяется переменной окружения FILESERVER_FILE_PATH
+  # (например, при запуске в Docker с примонтированным томом).
+  file-path: ${FILESERVER_FILE_PATH:/home/ravil/files/mif.zip}

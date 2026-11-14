@@ -1,6 +1,6 @@
 package ars.home.fileserver.controller;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -11,16 +11,18 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 @RestController
-@RequiredArgsConstructor
 public class Dashboard {
 
+    private final String pathToFile;
 
-    private static final String PATH_TO_FLE = "/home/ravil/files/mif.zip";
+    public Dashboard(@Value("${fileserver.file-path}") String pathToFile) {
+        this.pathToFile = pathToFile;
+    }
 
 
     @GetMapping(value = "/file/download",
             produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public @ResponseBody byte[] downLoadFile() throws IOException {
-        return Files.readAllBytes(new File(PATH_TO_FLE).toPath());
+        return Files.readAllBytes(new File(pathToFile).toPath());
     }
 }

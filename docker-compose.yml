@@ -1,0 +1,13 @@
+services:
+  fileserver:
+    build: .
+    image: fileserver:latest
+    container_name: fileserver
+    restart: unless-stopped
+    ports:
+      - "${FILESERVER_PORT:-8080}:8080"
+    environment:
+      FILESERVER_FILE_PATH: /data/mif.zip
+    volumes:
+      # Каталог с книгами на хосте. По умолчанию — ./books рядом с compose-файлом.
+      - "${BOOKS_DIR:-./books}:/data:ro"
