@@ -1,8 +1,8 @@
 package ars.home.fileserver.service;
 
 import ars.home.fileserver.dto.BookFileDto;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -20,12 +20,12 @@ import java.util.stream.Stream;
 /**
  * Работа с каталогом книг: список файлов и поиск файла для скачивания.
  */
+@Slf4j
 @Service
 public class BookService {
 
-    private static final Logger log = LoggerFactory.getLogger(BookService.class);
-
     private final Path booksDir;
+    @Getter
     private final long refreshIntervalSeconds;
 
     public BookService(@Value("${fileserver.books-dir}") String booksDir,
@@ -74,10 +74,6 @@ public class BookService {
         } catch (InvalidPathException e) {
             return Optional.empty();
         }
-    }
-
-    public long getRefreshIntervalSeconds() {
-        return refreshIntervalSeconds;
     }
 
     private BookFileDto toDto(Path path) {
