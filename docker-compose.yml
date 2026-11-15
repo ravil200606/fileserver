@@ -12,4 +12,4 @@ services:
       FILESERVER_REFRESH_INTERVAL_SECONDS: "${FILESERVER_REFRESH_INTERVAL_SECONDS:-5}"
     volumes:
       # Каталог с книгами на хосте. По умолчанию — ./books рядом с compose-файлом.
-      - "${BOOKS_HOST_DIR:-./books}:/data:ro"
+      - "${BOOKS_HOST_DIR:-./books}:/data"

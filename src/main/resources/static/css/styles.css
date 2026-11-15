@@ -30,12 +30,39 @@ body {
     margin-bottom: 24px;
 }
 
-.page-title {
+.tabs {
     float: left;
-    margin: 0;
-    font-size: 28px;
+}
+
+.tab {
+    display: inline-block;
+    margin: 0 6px 0 0;
+    padding: 8px 16px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    -webkit-border-radius: 6px;
+    background-color: #ffffff;
+    color: #495057;
+    font-family: inherit;
+    font-size: 18px;
     font-weight: 500;
     line-height: 1.2;
+    cursor: pointer;
+    -webkit-appearance: none;
+}
+
+.tab:hover,
+.tab:focus {
+    background-color: #e9ecef;
+    outline: 0;
+}
+
+.tab-active,
+.tab-active:hover,
+.tab-active:focus {
+    border-color: #0d6efd;
+    background-color: #0d6efd;
+    color: #ffffff;
 }
 
 .count-badge {
@@ -71,6 +98,55 @@ body {
     border-color: #f5c2c7;
     background-color: #f8d7da;
     color: #842029;
+}
+
+.toolbar {
+    margin-bottom: 16px;
+}
+
+.toolbar .btn {
+    margin-right: 8px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 3px 12px;
+    border: 1px solid transparent;
+    border-radius: 0;
+    -webkit-border-radius: 0;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1;
+    cursor: pointer;
+    -webkit-appearance: none;
+}
+
+.btn-primary {
+    border-color: #198754;
+    background-color: #198754;
+    color: #ffffff;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    border-color: #157347;
+    background-color: #157347;
+    outline: 0;
+}
+
+.btn-primary:active {
+    border-color: #146c43;
+    background-color: #146c43;
+}
+
+.btn:disabled,
+.btn:disabled:hover,
+.btn:disabled:focus {
+    border-color: #6c757d;
+    background-color: #6c757d;
+    opacity: 1;
+    cursor: default;
 }
 
 .card {
@@ -112,6 +188,23 @@ body {
     padding-top: 8px;
     padding-bottom: 8px;
     font-weight: 400;
+}
+
+.books-table .select-cell {
+    width: 44px;
+    text-align: center;
+}
+
+.books-table .select-cell input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    vertical-align: middle;
+    cursor: pointer;
+}
+
+.books-table .select-cell input:disabled {
+    cursor: default;
 }
 
 .books-table tbody td {
@@ -217,8 +310,13 @@ body {
         padding: 16px 12px;
     }
 
-    .page-title {
-        font-size: 24px;
+    .tab {
+        padding: 7px 12px;
+        font-size: 16px;
+    }
+
+    .count-badge {
+        margin-top: 3px;
     }
 
     .books-table th,

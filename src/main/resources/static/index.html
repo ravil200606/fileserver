@@ -4,48 +4,93 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Fileserver — книги</title>
-    <link rel="stylesheet" href="/css/styles.css?v=3">
+    <link rel="stylesheet" href="/css/styles.css?v=7">
 </head>
 <body>
 <div class="page">
     <div class="page-header">
-        <h1 class="page-title">Книги</h1>
+        <div class="tabs" role="tablist" aria-label="Разделы">
+            <button id="tab-books" type="button" class="tab tab-active" role="tab"
+                    aria-selected="true" aria-controls="panel-books">Книги</button>
+            <button id="tab-archive" type="button" class="tab" role="tab"
+                    aria-selected="false" aria-controls="panel-archive">Архив</button>
+        </div>
         <span id="count" class="count-badge" style="display: none;"></span>
     </div>
 
-    <div id="status" class="alert alert-secondary" role="status">Загрузка…</div>
+    <div id="panel-books" class="tab-panel" role="tabpanel" aria-labelledby="tab-books">
+        <div id="status" class="alert alert-secondary" role="status">Загрузка…</div>
 
-    <div id="books-card" class="card" style="display: none;">
-        <div class="table-wrapper">
-            <table class="books-table">
-                <thead>
-                <tr>
-                    <th scope="col" class="nowrap">Автор</th>
-                    <th scope="col">Название</th>
-                    <th scope="col" class="text-end nowrap">Размер файла</th>
-                </tr>
-                <tr class="filter-row">
-                    <th scope="col">
-                        <div class="filter-field">
-                            <input id="filter-author" type="text" class="filter-input"
-                                   placeholder="Автор" aria-label="Фильтр по автору" autocomplete="off">
-                            <button id="clear-filter-author" type="button" class="filter-clear"
-                                    aria-label="Очистить фильтр по автору" title="Очистить">&times;</button>
-                        </div>
-                    </th>
-                    <th scope="col">
-                        <div class="filter-field">
-                            <input id="filter-title" type="text" class="filter-input"
-                                   placeholder="Название" aria-label="Фильтр по названию" autocomplete="off">
-                            <button id="clear-filter-title" type="button" class="filter-clear"
-                                    aria-label="Очистить фильтр по названию" title="Очистить">&times;</button>
-                        </div>
-                    </th>
-                    <th scope="col"></th>
-                </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+        <div class="toolbar">
+            <button id="archive-selected" type="button" class="btn btn-primary" disabled>Архивировать</button>
+        </div>
+
+        <div id="books-card" class="card" style="display: none;">
+            <div class="table-wrapper">
+                <table class="books-table">
+                    <thead>
+                    <tr>
+                        <th scope="col" class="nowrap">Автор</th>
+                        <th scope="col">Название</th>
+                        <th scope="col" class="text-end nowrap">Размер файла</th>
+                        <th scope="col" class="select-cell">
+                            <input id="select-all" type="checkbox" aria-label="Выбрать все книги"
+                                   title="Выбрать все">
+                        </th>
+                    </tr>
+                    <tr class="filter-row">
+                        <th scope="col">
+                            <div class="filter-field">
+                                <input id="filter-author" type="text" class="filter-input"
+                                       placeholder="Автор" aria-label="Фильтр по автору" autocomplete="off">
+                                <button id="clear-filter-author" type="button" class="filter-clear"
+                                        aria-label="Очистить фильтр по автору" title="Очистить">&times;</button>
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="filter-field">
+                                <input id="filter-title" type="text" class="filter-input"
+                                       placeholder="Название" aria-label="Фильтр по названию" autocomplete="off">
+                                <button id="clear-filter-title" type="button" class="filter-clear"
+                                        aria-label="Очистить фильтр по названию" title="Очистить">&times;</button>
+                            </div>
+                        </th>
+                        <th scope="col"></th>
+                        <th scope="col"></th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="panel-archive" class="tab-panel" role="tabpanel" aria-labelledby="tab-archive"
+         style="display: none;">
+        <div id="archive-status" class="alert alert-secondary" role="status">Загрузка…</div>
+
+        <div class="toolbar">
+            <button id="restore-selected" type="button" class="btn btn-primary" disabled>Восстановить</button>
+            <button id="delete-selected" type="button" class="btn btn-primary" disabled>Удалить</button>
+        </div>
+
+        <div id="archive-card" class="card" style="display: none;">
+            <div class="table-wrapper">
+                <table class="books-table">
+                    <thead>
+                    <tr>
+                        <th scope="col" class="nowrap">Автор</th>
+                        <th scope="col">Название</th>
+                        <th scope="col" class="text-end nowrap">Размер файла</th>
+                        <th scope="col" class="select-cell">
+                            <input id="archive-select-all" type="checkbox"
+                                   aria-label="Выбрать все архивные книги" title="Выбрать все">
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -56,6 +101,20 @@
         var tbody = card.getElementsByTagName('tbody')[0];
         var status = document.getElementById('status');
         var count = document.getElementById('count');
+        var selectAll = document.getElementById('select-all');
+        var archiveButton = document.getElementById('archive-selected');
+
+        var tabBooks = document.getElementById('tab-books');
+        var tabArchive = document.getElementById('tab-archive');
+        var panelBooks = document.getElementById('panel-books');
+        var panelArchive = document.getElementById('panel-archive');
+
+        var archiveStatus = document.getElementById('archive-status');
+        var archiveCard = document.getElementById('archive-card');
+        var archiveTbody = archiveCard.getElementsByTagName('tbody')[0];
+        var archiveSelectAll = document.getElementById('archive-select-all');
+        var restoreButton = document.getElementById('restore-selected');
+        var deleteButton = document.getElementById('delete-selected');
 
         var authorFilter = document.getElementById('filter-author');
         var titleFilter = document.getElementById('filter-title');
@@ -63,9 +122,17 @@
         var clearTitleFilter = document.getElementById('clear-filter-title');
 
         var allFiles = [];
+        var visibleFiles = [];
+        var selectedFiles = {};
+        var allArchivedFiles = [];
+        var selectedArchivedFiles = {};
+        var activeTab = 'books';
         var refreshIntervalSeconds = 5;
         var lastSignature = null;
+        var lastArchiveSignature = null;
         var timerId = null;
+        var archiveInProgress = false;
+        var archiveOperationInProgress = false;
 
         function showStatus(message, type) {
             status.className = 'alert alert-' + type;
@@ -75,6 +142,16 @@
 
         function hideStatus() {
             status.style.display = 'none';
+        }
+
+        function showArchiveStatus(message, type) {
+            archiveStatus.className = 'alert alert-' + type;
+            archiveStatus.style.display = '';
+            archiveStatus.textContent = message;
+        }
+
+        function hideArchiveStatus() {
+            archiveStatus.style.display = 'none';
         }
 
         function setVisible(element, visible) {
@@ -125,9 +202,417 @@
             return result;
         }
 
+        function isSelected(name) {
+            return selectedFiles['k:' + name] === true;
+        }
+
+        function setSelected(name, selected) {
+            if (selected) {
+                selectedFiles['k:' + name] = true;
+            } else {
+                delete selectedFiles['k:' + name];
+            }
+        }
+
+        function countSelected() {
+            var result = 0;
+            for (var key in selectedFiles) {
+                if (selectedFiles.hasOwnProperty(key)) {
+                    result++;
+                }
+            }
+            return result;
+        }
+
+        function updateArchiveButton() {
+            archiveButton.disabled = archiveInProgress || countSelected() === 0;
+        }
+
+        function pruneSelection() {
+            var present = {};
+            for (var i = 0; i < allFiles.length; i++) {
+                present['k:' + allFiles[i].name] = true;
+            }
+            for (var key in selectedFiles) {
+                if (selectedFiles.hasOwnProperty(key) && !present[key]) {
+                    delete selectedFiles[key];
+                }
+            }
+        }
+
+        function updateSelectAll() {
+            var selectedCount = 0;
+            for (var i = 0; i < visibleFiles.length; i++) {
+                if (isSelected(visibleFiles[i].name)) {
+                    selectedCount++;
+                }
+            }
+
+            selectAll.checked = visibleFiles.length > 0 && selectedCount === visibleFiles.length;
+            selectAll.indeterminate = selectedCount > 0 && selectedCount < visibleFiles.length;
+            selectAll.disabled = visibleFiles.length === 0;
+            updateArchiveButton();
+        }
+
+        function handleRowSelection() {
+            setSelected(this.value, this.checked);
+            updateSelectAll();
+        }
+
+        selectAll.onchange = function () {
+            var checked = selectAll.checked;
+            for (var i = 0; i < visibleFiles.length; i++) {
+                setSelected(visibleFiles[i].name, checked);
+            }
+
+            var checkboxes = tbody.getElementsByTagName('input');
+            for (var j = 0; j < checkboxes.length; j++) {
+                checkboxes[j].checked = checked;
+            }
+            updateSelectAll();
+        };
+
+        function removeFilesFromList(names) {
+            var remove = {};
+            for (var i = 0; i < names.length; i++) {
+                remove['k:' + names[i]] = true;
+            }
+
+            var remaining = [];
+            for (var j = 0; j < allFiles.length; j++) {
+                if (!remove['k:' + allFiles[j].name]) {
+                    remaining.push(allFiles[j]);
+                }
+            }
+            allFiles = remaining;
+        }
+
+        archiveButton.onclick = function () {
+            var names = [];
+            for (var key in selectedFiles) {
+                if (selectedFiles.hasOwnProperty(key)) {
+                    names.push(key.substring(2));
+                }
+            }
+            if (names.length === 0) {
+                return;
+            }
+
+            archiveInProgress = true;
+            updateArchiveButton();
+
+            var request = new XMLHttpRequest();
+
+            request.onreadystatechange = function () {
+                if (request.readyState !== 4) {
+                    return;
+                }
+
+                archiveInProgress = false;
+
+                if (request.status !== 200) {
+                    updateArchiveButton();
+                    showStatus('Не удалось архивировать книги: HTTP ' + request.status, 'danger');
+                    return;
+                }
+
+                var result;
+                try {
+                    result = JSON.parse(request.responseText);
+                } catch (error) {
+                    updateArchiveButton();
+                    showStatus('Не удалось архивировать книги: некорректный ответ сервера', 'danger');
+                    return;
+                }
+
+                selectedFiles = {};
+                if (!result.failed) {
+                    removeFilesFromList(names);
+                }
+
+                render();
+
+                if (result.failed > 0) {
+                    showStatus('Архивировано книг: ' + result.succeeded
+                            + '. Не удалось архивировать: ' + result.failed + '.', 'danger');
+                } else {
+                    showStatus('Архивировано книг: ' + result.succeeded + '.', 'secondary');
+                }
+                scheduleNextRefresh();
+            };
+
+            request.onerror = function () {
+                archiveInProgress = false;
+                updateArchiveButton();
+                showStatus('Не удалось архивировать книги: ошибка сети', 'danger');
+            };
+
+            request.open('POST', '/files/archive', true);
+            request.setRequestHeader('Content-Type', 'application/json');
+            request.send(JSON.stringify(names));
+        };
+
+        function isArchiveSelected(name) {
+            return selectedArchivedFiles['a:' + name] === true;
+        }
+
+        function setArchiveSelected(name, selected) {
+            if (selected) {
+                selectedArchivedFiles['a:' + name] = true;
+            } else {
+                delete selectedArchivedFiles['a:' + name];
+            }
+        }
+
+        function countArchiveSelected() {
+            var result = 0;
+            for (var key in selectedArchivedFiles) {
+                if (selectedArchivedFiles.hasOwnProperty(key)) {
+                    result++;
+                }
+            }
+            return result;
+        }
+
+        function updateArchiveButtons() {
+            var disabled = archiveOperationInProgress || countArchiveSelected() === 0;
+            restoreButton.disabled = disabled;
+            deleteButton.disabled = disabled;
+        }
+
+        function pruneArchiveSelection() {
+            var present = {};
+            for (var i = 0; i < allArchivedFiles.length; i++) {
+                present['a:' + allArchivedFiles[i].name] = true;
+            }
+            for (var key in selectedArchivedFiles) {
+                if (selectedArchivedFiles.hasOwnProperty(key) && !present[key]) {
+                    delete selectedArchivedFiles[key];
+                }
+            }
+        }
+
+        function updateArchiveSelectAll() {
+            var selectedCount = 0;
+            for (var i = 0; i < allArchivedFiles.length; i++) {
+                if (isArchiveSelected(allArchivedFiles[i].name)) {
+                    selectedCount++;
+                }
+            }
+
+            archiveSelectAll.checked = allArchivedFiles.length > 0
+                    && selectedCount === allArchivedFiles.length;
+            archiveSelectAll.indeterminate = selectedCount > 0
+                    && selectedCount < allArchivedFiles.length;
+            archiveSelectAll.disabled = allArchivedFiles.length === 0;
+            updateArchiveButtons();
+        }
+
+        function handleArchiveRowSelection() {
+            setArchiveSelected(this.value, this.checked);
+            updateArchiveSelectAll();
+        }
+
+        archiveSelectAll.onchange = function () {
+            var checked = archiveSelectAll.checked;
+            for (var i = 0; i < allArchivedFiles.length; i++) {
+                setArchiveSelected(allArchivedFiles[i].name, checked);
+            }
+
+            var checkboxes = archiveTbody.getElementsByTagName('input');
+            for (var j = 0; j < checkboxes.length; j++) {
+                checkboxes[j].checked = checked;
+            }
+            updateArchiveSelectAll();
+        };
+
+        function archiveSelectedNames() {
+            var names = [];
+            for (var key in selectedArchivedFiles) {
+                if (selectedArchivedFiles.hasOwnProperty(key)) {
+                    names.push(key.substring(2));
+                }
+            }
+            return names;
+        }
+
+        function removeArchivedFilesFromList(names) {
+            var remove = {};
+            for (var i = 0; i < names.length; i++) {
+                remove['a:' + names[i]] = true;
+            }
+
+            var remaining = [];
+            for (var j = 0; j < allArchivedFiles.length; j++) {
+                if (!remove['a:' + allArchivedFiles[j].name]) {
+                    remaining.push(allArchivedFiles[j]);
+                }
+            }
+            allArchivedFiles = remaining;
+        }
+
+        function renderArchive() {
+            if (allArchivedFiles.length === 0) {
+                lastArchiveSignature = null;
+                updateArchiveSelectAll();
+                setVisible(archiveCard, false);
+                showArchiveStatus('В архиве пока нет книг.', 'secondary');
+                return;
+            }
+
+            hideArchiveStatus();
+            setVisible(archiveCard, true);
+
+            var signatureParts = ['archive'];
+            for (var i = 0; i < allArchivedFiles.length; i++) {
+                signatureParts.push(allArchivedFiles[i].name + '\u0000'
+                        + allArchivedFiles[i].size + '\u0000' + allArchivedFiles[i].modified);
+            }
+            var signature = signatureParts.join('\u0001');
+            if (signature === lastArchiveSignature) {
+                updateArchiveSelectAll();
+                return;
+            }
+            lastArchiveSignature = signature;
+
+            clearChildren(archiveTbody);
+
+            for (var j = 0; j < allArchivedFiles.length; j++) {
+                var file = allArchivedFiles[j];
+                var row = document.createElement('tr');
+
+                var authorCell = document.createElement('td');
+                authorCell.className = 'nowrap';
+                authorCell.appendChild(document.createTextNode(file.author || '—'));
+
+                var titleCell = document.createElement('td');
+                titleCell.appendChild(document.createTextNode(file.title));
+
+                var sizeCell = document.createElement('td');
+                sizeCell.className = 'text-end nowrap muted';
+                sizeCell.appendChild(document.createTextNode(formatSize(file.size)));
+
+                var selectCell = document.createElement('td');
+                selectCell.className = 'select-cell';
+                var checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'row-select';
+                checkbox.value = file.name;
+                checkbox.checked = isArchiveSelected(file.name);
+                checkbox.setAttribute('aria-label', 'Выбрать архивную книгу «' + file.title + '»');
+                checkbox.onchange = handleArchiveRowSelection;
+                selectCell.appendChild(checkbox);
+
+                row.appendChild(authorCell);
+                row.appendChild(titleCell);
+                row.appendChild(sizeCell);
+                row.appendChild(selectCell);
+                archiveTbody.appendChild(row);
+            }
+
+            updateArchiveSelectAll();
+        }
+
+        function runArchiveOperation(url, names, actionName, resultLabel) {
+            if (names.length === 0) {
+                return;
+            }
+
+            archiveOperationInProgress = true;
+            updateArchiveButtons();
+
+            var request = new XMLHttpRequest();
+
+            request.onreadystatechange = function () {
+                if (request.readyState !== 4) {
+                    return;
+                }
+
+                archiveOperationInProgress = false;
+
+                if (request.status !== 200) {
+                    updateArchiveButtons();
+                    showArchiveStatus('Не удалось ' + actionName + ' книги: HTTP '
+                            + request.status, 'danger');
+                    return;
+                }
+
+                var result;
+                try {
+                    result = JSON.parse(request.responseText);
+                } catch (error) {
+                    updateArchiveButtons();
+                    showArchiveStatus('Не удалось ' + actionName
+                            + ' книги: некорректный ответ сервера', 'danger');
+                    return;
+                }
+
+                selectedArchivedFiles = {};
+                if (!result.failed) {
+                    removeArchivedFilesFromList(names);
+                }
+
+                renderArchive();
+
+                if (result.failed > 0) {
+                    showArchiveStatus(resultLabel + ': ' + result.succeeded
+                            + '. Не удалось: ' + result.failed + '.', 'danger');
+                } else {
+                    showArchiveStatus(resultLabel + ': ' + result.succeeded + '.', 'secondary');
+                }
+                scheduleNextRefresh();
+            };
+
+            request.onerror = function () {
+                archiveOperationInProgress = false;
+                updateArchiveButtons();
+                showArchiveStatus('Не удалось ' + actionName + ' книги: ошибка сети', 'danger');
+            };
+
+            request.open('POST', url, true);
+            request.setRequestHeader('Content-Type', 'application/json');
+            request.send(JSON.stringify(names));
+        }
+
+        restoreButton.onclick = function () {
+            runArchiveOperation('/archive/restore', archiveSelectedNames(),
+                    'восстановить', 'Восстановлено книг');
+        };
+
+        deleteButton.onclick = function () {
+            runArchiveOperation('/archive/delete', archiveSelectedNames(),
+                    'удалить', 'Удалено книг');
+        };
+
+        function showTab(name) {
+            var booksVisible = name === 'books';
+            activeTab = booksVisible ? 'books' : 'archive';
+
+            setVisible(panelBooks, booksVisible);
+            setVisible(panelArchive, !booksVisible);
+            setVisible(count, booksVisible && allFiles.length > 0);
+
+            tabBooks.className = booksVisible ? 'tab tab-active' : 'tab';
+            tabArchive.className = booksVisible ? 'tab' : 'tab tab-active';
+            tabBooks.setAttribute('aria-selected', booksVisible ? 'true' : 'false');
+            tabArchive.setAttribute('aria-selected', booksVisible ? 'false' : 'true');
+        }
+
+        tabBooks.onclick = function () {
+            showTab('books');
+            refresh();
+        };
+
+        tabArchive.onclick = function () {
+            showTab('archive');
+            refreshArchive();
+        };
+
         function render() {
             if (allFiles.length === 0) {
                 lastSignature = null;
+                visibleFiles = [];
+                updateSelectAll();
                 setVisible(card, false);
                 setVisible(count, false);
                 showStatus('В каталоге пока нет книг.', 'secondary');
@@ -136,11 +621,12 @@
 
             hideStatus();
             setVisible(card, true);
-            setVisible(count, true);
+            setVisible(count, activeTab === 'books');
 
             var authorQuery = filterQuery(authorFilter);
             var titleQuery = filterQuery(titleFilter);
             var files = filterFiles(authorQuery, titleQuery);
+            visibleFiles = files;
             var filtersActive = authorQuery !== '' || titleQuery !== '';
 
             count.textContent = filtersActive
@@ -153,6 +639,7 @@
             }
             var signature = signatureParts.join('\u0001');
             if (signature === lastSignature) {
+                updateSelectAll();
                 return;
             }
             lastSignature = signature;
@@ -163,11 +650,12 @@
                 emptyRow.className = 'empty-row';
 
                 var emptyCell = document.createElement('td');
-                emptyCell.colSpan = 3;
+                emptyCell.colSpan = 4;
                 emptyCell.appendChild(document.createTextNode('Ничего не найдено.'));
 
                 emptyRow.appendChild(emptyCell);
                 tbody.appendChild(emptyRow);
+                updateSelectAll();
                 return;
             }
 
@@ -190,11 +678,25 @@
                 sizeCell.className = 'text-end nowrap muted';
                 sizeCell.appendChild(document.createTextNode(formatSize(file.size)));
 
+                var selectCell = document.createElement('td');
+                selectCell.className = 'select-cell';
+                var checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'row-select';
+                checkbox.value = file.name;
+                checkbox.checked = isSelected(file.name);
+                checkbox.setAttribute('aria-label', 'Выбрать книгу «' + file.title + '»');
+                checkbox.onchange = handleRowSelection;
+                selectCell.appendChild(checkbox);
+
                 row.appendChild(authorCell);
                 row.appendChild(titleCell);
                 row.appendChild(sizeCell);
+                row.appendChild(selectCell);
                 tbody.appendChild(row);
             }
+
+            updateSelectAll();
         }
 
         function handleFilterInput() {
@@ -220,10 +722,20 @@
 
         function scheduleNextRefresh() {
             clearTimeout(timerId);
-            timerId = setTimeout(refresh, refreshIntervalSeconds * 1000);
+            timerId = setTimeout(refreshActive, refreshIntervalSeconds * 1000);
+        }
+
+        function refreshActive() {
+            if (activeTab === 'archive') {
+                refreshArchive();
+            } else {
+                refresh();
+            }
         }
 
         function refresh() {
+            clearTimeout(timerId);
+
             var request = new XMLHttpRequest();
             var finished = false;
 
@@ -242,15 +754,17 @@
 
                 try {
                     if (request.status !== 200) {
-                        throw new Error('HTTP ' + request.status);
+                        showStatus('Не удалось обновить список файлов: HTTP '
+                                + request.status, 'danger');
+                    } else {
+                        var data = JSON.parse(request.responseText);
+                        var interval = parseInt(data.refreshIntervalSeconds, 10);
+                        refreshIntervalSeconds = interval > 0 ? interval : 5;
+
+                        allFiles = data.files || [];
+                        pruneSelection();
+                        render();
                     }
-
-                    var data = JSON.parse(request.responseText);
-                    var interval = parseInt(data.refreshIntervalSeconds, 10);
-                    refreshIntervalSeconds = interval > 0 ? interval : 5;
-
-                    allFiles = data.files || [];
-                    render();
                 } catch (error) {
                     showStatus('Не удалось обновить список файлов: ' + error.message, 'danger');
                 } finally {
@@ -264,6 +778,55 @@
             };
 
             request.open('GET', '/files?_=' + new Date().getTime(), true);
+            request.setRequestHeader('Cache-Control', 'no-cache');
+            request.send(null);
+        }
+
+        function refreshArchive() {
+            clearTimeout(timerId);
+
+            var request = new XMLHttpRequest();
+            var finished = false;
+
+            function finish() {
+                if (finished) {
+                    return;
+                }
+                finished = true;
+                scheduleNextRefresh();
+            }
+
+            request.onreadystatechange = function () {
+                if (request.readyState !== 4) {
+                    return;
+                }
+
+                try {
+                    if (request.status !== 200) {
+                        showArchiveStatus('Не удалось обновить список архива: HTTP '
+                                + request.status, 'danger');
+                    } else {
+                        var data = JSON.parse(request.responseText);
+                        var interval = parseInt(data.refreshIntervalSeconds, 10);
+                        refreshIntervalSeconds = interval > 0 ? interval : 5;
+
+                        allArchivedFiles = data.files || [];
+                        pruneArchiveSelection();
+                        renderArchive();
+                    }
+                } catch (error) {
+                    showArchiveStatus('Не удалось обновить список архива: ' + error.message, 'danger');
+                } finally {
+                    finish();
+                }
+            };
+
+            request.onerror = function () {
+                showArchiveStatus('Не удалось обновить список архива: ошибка сети', 'danger');
+                finish();
+            };
+
+            request.open('GET', '/archive?_=' + new Date().getTime(), true);
             request.setRequestHeader('Cache-Control', 'no-cache');
             request.send(null);
         }
