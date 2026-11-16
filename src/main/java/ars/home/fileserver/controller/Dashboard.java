@@ -1,5 +1,6 @@
 package ars.home.fileserver.controller;
 
+import ars.home.fileserver.dto.BookFileDto;
 import ars.home.fileserver.dto.BookListDto;
 import ars.home.fileserver.dto.FileOperationResultDto;
 import ars.home.fileserver.service.BookService;
@@ -58,6 +59,12 @@ public class Dashboard {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public FileOperationResultDto deleteFiles(@RequestBody List<String> names) {
         return bookService.deleteBooks(names);
+    }
+
+    @GetMapping(value = "/file", produces = MediaType.APPLICATION_JSON_VALUE)
+    public BookFileDto getFile(@RequestParam("name") String name) {
+        return bookService.getBook(name)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found"));
     }
 
     @GetMapping(value = "/file/download", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
