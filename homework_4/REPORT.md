@@ -125,6 +125,8 @@ FILESERVER_BASE_URL='http://localhost:8080'
 [OPENCODE_REPORT_2.md - Результат прогона с реальной моделью](OPENCODE_REPORT_2.md)
 
 ### Проверка реальной работы агента в связке с приложением сервера API
+Пример команды запуска ИИ агента с запросом
+./gradlew bootRun --args="удали книгу Стругацкий_А_Н-Полдень XII век.zip" > ../Delete.log
 
 [ByAuthor.log - Получить все книги по автору](ByAuthor.log)
 
