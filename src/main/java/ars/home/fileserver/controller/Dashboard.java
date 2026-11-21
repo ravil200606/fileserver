@@ -35,6 +35,11 @@ public class Dashboard {
         return new BookListDto(bookService.listBooks(), bookService.getRefreshIntervalSeconds());
     }
 
+    @GetMapping(value = "/getByAuthor", produces = MediaType.APPLICATION_JSON_VALUE)
+    public BookListDto listFilesByAuthor(@RequestParam("author") String author) {
+        return new BookListDto(bookService.listBooksByAuthor(author), bookService.getRefreshIntervalSeconds());
+    }
+
     @PostMapping(value = "/files/archive",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)

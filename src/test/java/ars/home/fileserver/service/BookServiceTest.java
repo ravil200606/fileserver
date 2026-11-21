@@ -455,6 +455,68 @@ class BookServiceTest {
     }
 
     @Test
+    void listBooksByAuthorReturnsBooksByMatchingSurname() throws IOException {
+        writeFile(booksDir, "Ivanov_I-Book One.zip", "book");
+        writeFile(booksDir, "Ivanov_P-Book Two.zip", "book");
+        writeFile(booksDir, "Petrov_P-Another.zip", "book");
+
+        List<String> names = namesOf(service.listBooksByAuthor("Ivanov"));
+
+        assertEquals(2, names.size());
+        assertTrue(names.contains("Ivanov_I-Book One.zip"));
+        assertTrue(names.contains("Ivanov_P-Book Two.zip"));
+        assertFalse(names.contains("Petrov_P-Another.zip"));
+    }
+
+    @Test
+    void listBooksByAuthorMatchesSurnameCaseInsensitively() throws IOException {
+        writeFile(booksDir, "Толстой_Л_Н-Анна Каренина.zip", "book");
+
+        assertFalse(service.listBooksByAuthor("толстой").isEmpty());
+        assertFalse(service.listBooksByAuthor("ТОЛСТОЙ").isEmpty());
+        assertFalse(service.listBooksByAuthor("Толстой").isEmpty());
+    }
+
+    @Test
+    void listBooksByAuthorReturnsEmptyForUnknownSurname() throws IOException {
+        writeFile(booksDir, "Ivanov_I-Book.zip", "book");
+
+        assertTrue(service.listBooksByAuthor("Petrov").isEmpty());
+    }
+
+    @Test
+    void listBooksByAuthorReturnsEmptyForNullOrBlankSurname() throws IOException {
+        writeFile(booksDir, "Ivanov_I-Book.zip", "book");
+
+        assertTrue(service.listBooksByAuthor(null).isEmpty());
+        assertTrue(service.listBooksByAuthor("").isEmpty());
+        assertTrue(service.listBooksByAuthor("   ").isEmpty());
+    }
+
+    @Test
+    void listBooksByAuthorExcludesArchivedBooks() throws IOException {
+        writeFile(booksDir, "Ivanov_I-Book.zip", "book");
+        writeFile(booksDir, "Ivanov_I-Old.zip.arch", "archived");
+
+        List<String> names = namesOf(service.listBooksByAuthor("Ivanov"));
+
+        assertEquals(1, names.size());
+        assertTrue(names.contains("Ivanov_I-Book.zip"));
+        assertFalse(names.contains("Ivanov_I-Old.zip.arch"));
+    }
+
+    @Test
+    void listBooksByAuthorExcludesBooksWithoutAuthor() throws IOException {
+        writeFile(booksDir, "NoConvention.zip", "book");
+        writeFile(booksDir, "Ivanov_I-Book.zip", "book");
+
+        List<String> names = namesOf(service.listBooksByAuthor("Ivanov"));
+
+        assertEquals(1, names.size());
+        assertFalse(names.contains("NoConvention.zip"));
+    }
+
+    @Test
     void operationsReturnZeroCountsForNullOrEmptyNameLists() {
         assertEquals(new FileOperationResultDto(0, 0), service.archiveBooks(null));
         assertEquals(new FileOperationResultDto(0, 0), service.archiveBooks(List.of()));

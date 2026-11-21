@@ -50,6 +50,30 @@ public class BookService {
     }
 
     /**
+     * Возвращает книги, у которых фамилия автора совпадает с заданной (без учёта регистра).
+     * Фамилия определяется как первое слово поля {@link BookFileDto#author()}.
+     *
+     * @param surname фамилия автора
+     * @return список книг, у которых фамилия автора совпадает с заданной
+     */
+    public List<BookFileDto> listBooksByAuthor(String surname) {
+        if (surname == null || surname.isBlank()) {
+            return List.of();
+        }
+        String normalized = surname.trim().toLowerCase(Locale.ROOT);
+        return listBooks().stream()
+                .filter(book -> {
+                    String author = book.author();
+                    if (author == null || author.isBlank()) {
+                        return false;
+                    }
+                    String firstWord = author.split(" ", 2)[0].toLowerCase(Locale.ROOT);
+                    return firstWord.equals(normalized);
+                })
+                .toList();
+    }
+
+    /**
      * Возвращает файлы, перенесённые в архив (с расширением {@link #ARCHIVE_EXTENSION}).
      */
     public List<BookFileDto> listArchivedBooks() {
